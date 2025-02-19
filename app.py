@@ -5,7 +5,7 @@ import os
 
 gpt4o_config = {
     "model": "gpt-4o",
-    "api_key": os.environ.get("api_key"),
+    "api_key": os.environ.get("OPEN_AI_API"),
 }
 
 user_proxy = UserProxyAgent(
@@ -26,10 +26,15 @@ engineer = AssistantAgent(
   name="Engineer",
   llm_config=gpt4o_config,
   system_message="""Engineer. You follow an approved plan. You write Python/shell code to solve tasks.\
-    Wrap the code in a code block that specifies the script type. The user can't modify your code. Don't include multiple code blocks in one response. \
-    Do not ask others to copy and paste the result. Check the execution result returned by the executor. \
+    Wrap the code in a code block that specifies the script type. The user can't modify your code. Don't include multiple code blocks in one response.\
+    Do not ask others to copy and paste the result. Check the execution result returned by the executor.\
     If the result indicates there is an error, fix the error and output the code again. Suggest the full code instead of partial code or code changes.\
-    If the error can't be fixed or if the task is not solved even after the code is executed successfully, analyse the problem."""
+    If the error can't be fixed or if the task is not solved even after the code is executed successfully, analyse the problem.
+    For Graph generation, use matplotlib/sns and make sure there are buy/sell signals as cones and coloring to indicate bear/bull trends .\
+    For PDF generation, There should be no huge whitespaces between texts. Make it compact and readable\with all images, code used, tables and graphss included.',
+
+
+    """
 )
 
 scientist = AssistantAgent(
@@ -60,10 +65,12 @@ critic = AssistantAgent(
 
 research_report_writer = AssistantAgent(
   name='ResearchWriter',
-  system_message='Research Report Writer. Write a research report based on the findings from the papers categorized by the scientist and exchange with critic to improve \
-  the quality of the report.\
-  The report should include the following sections: Introduction, Literature Review, Methodology, Results, Conclusion, and References.\
-  The report should be written in a clear and concise manner. Make sure to include proper citation and references.',
+  system_message='Research Report Writer. Write a research report based on the findings from the papers categorized by the scientist and exchange with critic to improve the quality of the report.\
+  The report should include the following sections: Title, Introduction, Literature Review, Methodology, Results, Conclusion, and References.\
+  The report should have a subtitle with :  Produced by Frankline&CoLP Quant Research AI Assstant.\
+  The report should be written in a clear and concise manner. Make sure to include proper citation and references.\
+  Ask the Engineer to generate graphs and tables for the report. The report should be saved as a PDF file. \
+  The engineer can run code to save the pdf file. The report should be saved as a PDF file.',
   llm_config=gpt4o_config
 )
 
@@ -75,4 +82,4 @@ groupchat = GroupChat(
 
 manager = GroupChatManager(groupchat=groupchat, llm_config=gpt4o_config)
 
-output_report = user_proxy.initiate_chat(manager, message = "Write a 4 paragraph research report about how to use mean reversion strategy in trading.")
+output_report = user_proxy.initiate_chat(manager, message = "Write a 5-page Technical Research report with graphs included and save a pdf of how to results of utilizing long/short High Frequency trading method for stock NVDA from January 2024 to December 2024.")
