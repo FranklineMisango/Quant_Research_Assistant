@@ -1,7 +1,11 @@
-from autogen import AssistantAgent, UserProxyAgent, config_list_from_json, GroupChat, GroupChatManager
+import asyncio
+from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
 from dotenv import load_dotenv
+from autogen.agents.experimental import  DeepResearchAgent
 load_dotenv()
 import os
+import nest_asyncio
+nest_asyncio.apply()
 
 gpt4o_config = {
     "model": "gpt-4o",
@@ -82,4 +86,27 @@ groupchat = GroupChat(
 
 manager = GroupChatManager(groupchat=groupchat, llm_config=gpt4o_config)
 
-output_report = user_proxy.initiate_chat(manager, message = "Write a 5-page Technical Research report with graphs included and save a pdf of how to results of utilizing long/short High Frequency trading method for stock NVDA from January 2024 to December 2024.")
+#output_report = user_proxy.initiate_chat(manager, message = "Can you read this book 'https://download.e-bookshelf.de/download/0000/5680/29/L-G-0000568029-0002381765.pdf' and tell me what strategies are listed?")
+
+deep_research_llm_config = {
+    "config_list": [{"api_type": "openai", "model": "gpt-4o", "api_key": os.environ["OPEN_AI_API"]}],
+}
+agent = DeepResearchAgent(
+    name="DeepResearchAgent",
+    llm_config=deep_research_llm_config,
+)
+
+message = "Create a report explaining how FPGA can be used in the field of AI and ML. Include the following sections: Title, Introduction, Literature Review, Methodology, Results, Conclusion, and References. The report should be written in a clear and concise manner. Make sure to include proper citation and references. Ask the Engineer to generate graphs and tables for the report. The report should be saved as a PDF file."
+
+async def main():
+    result = agent.run(
+        message=message,
+        tools=agent.tools,
+        max_turns=2,
+        user_input=False,
+        summary_method="reflection_with_llm",
+    )
+    print(result.summary)
+
+if __name__ == "__main__":
+    asyncio.run(main())
