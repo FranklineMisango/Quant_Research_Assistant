@@ -7,9 +7,15 @@ import nest_asyncio
 from autogen.agents.experimental import DeepResearchAgent
 import autogen
 nest_asyncio.apply()
-import chromadb
 from typing_extensions import Annotated
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
+import chromadb
+from typing_extensions import Annotated
+
+config_list = autogen.config_list_from_json("OAI_CONFIG_LIST")
+
+print("LLM models: ", [config_list[i]["model"] for i in range(len(config_list))])
+
 
 gpt4o_config = {
     "model": "gpt-4o-mini",
@@ -25,9 +31,28 @@ llm_config = {
     "seed": 1234
 }
 
+#The agent for
 deep_research_llm_config = {
     "config_list": [{"api_type": "openai", "model": "gpt-4o-mini", "api_key": os.environ["OPEN_AI_API"]}],
 }
+
+agent = DeepResearchAgent(
+    name="DeepResearchAgent",
+    llm_config=deep_research_llm_config, 
+    system_message="You can read papers on the internet and other sources to provide detailed information on the topic.",
+)
+
+#The agent for internet access below 
+def need_internet_chat():
+        result = agent.run(
+            message=PROBLEM,
+            tools=agent.tools,
+            max_turns=2,
+            user_input=False,
+            summary_method="reflection_with_llm",
+            )
+    
+        print(result.summary)
 
 def termination_msg(x):
     return isinstance(x, dict) and "TERMINATE" == str(x.get("content", ""))[-9:].upper()
@@ -37,7 +62,6 @@ boss = autogen.UserProxyAgent(
     is_termination_msg=termination_msg,
     human_input_mode="NEVER",
     code_execution_config=False, 
-    default_auto_reply="Reply `TERMINATE` if the task is done.",
     description="The boss who ask questions and give tasks.",
 )
 
@@ -66,28 +90,22 @@ boss_aid = RetrieveUserProxyAgent(
 coder = AssistantAgent(
     name="SeniorPythonEngineer",
     is_termination_msg=termination_msg,
-    system_message="""You are a senior python engineer, you provide python code to answer questions. 
+    system_message="""You are a senior python engineer and you provide python code to answer questions. 
     Wrap the code in a code block that specifies the script type. The user can't modify your code. Don't include multiple code blocks in one response.\
     Do not ask others to copy and paste the result. Check the execution result returned by the executor.\
     If the result indicates there is an error, fix the error and output the code again. Suggest the full code instead of partial code or code changes.\
     If the error can't be fixed or if the task is not solved even after the code is executed successfully, analyse the problem.
     For Graph generation, use matplotlib/sns and make sure there are buy/sell signals as cones and coloring to indicate bear/bull trends .\
-    For PDF generation, There should be no huge whitespaces between texts. Make it compact and readable\with all images, code used, tables and graphss included.',
-    Reply `TERMINATE` in the end when everything is done""",
+    For PDF generation, There should be no huge whitespaces between texts. Make it compact and readable\with all images, code used, tables and graphss included.',""",
     llm_config=llm_config,
     description="Senior Python Engineer who can write code to solve problems and answer questions.",
 )
 
-agent = DeepResearchAgent(
-    name="DeepResearchAgent",
-    llm_config=deep_research_llm_config, 
-    system_message="You can read papers on the internet and other sources to provide detailed information on the topic.",
-)
+
 
 pm = autogen.AssistantAgent(
     name="ProductManager",
     is_termination_msg=termination_msg,
-    system_message="You are a product manager. Reply `TERMINATE` in the end when everything is done.",
     llm_config=llm_config,
     description="Product Manager who can design and plan the project.",
 )
@@ -95,7 +113,6 @@ pm = autogen.AssistantAgent(
 reviewer = autogen.AssistantAgent(
     name="CodeReviewer",
     is_termination_msg=termination_msg,
-    system_message="You are a code reviewer. Reply `TERMINATE` in the end when everything is done.",
     llm_config=llm_config,
     description="Code Reviewer who can review the code.",
 )
@@ -122,7 +139,7 @@ def _reset_agents():
 def rag_chat():
     _reset_agents()
     groupchat = autogen.GroupChat(
-        agents=[boss_aid, pm, coder, reviewer], messages=[], max_round=12, speaker_selection_method="round_robin"
+        agents=[boss, boss_aid, pm, coder, reviewer], messages=[], max_round=12, speaker_selection_method="round_robin"
     )
     manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
 
@@ -137,7 +154,7 @@ def rag_chat():
 def norag_chat():
     _reset_agents()
     groupchat = autogen.GroupChat(
-        agents=[boss, pm, coder, reviewer, agent, research_report_writer],
+        agents=[boss,boss_aid, pm, coder, reviewer, agent, research_report_writer],
         messages=[],
         max_round=12,
         speaker_selection_method="auto",
@@ -151,16 +168,7 @@ def norag_chat():
         message=PROBLEM,
     )
 
-def need_internet_chat():
-        result = agent.run(
-            message=PROBLEM,
-            tools=agent.tools,
-            max_turns=2,
-            user_input=False,
-            summary_method="reflection_with_llm",
-            )
-    
-        print(result.summary)
+
 
 
 def call_rag_chat():
@@ -175,8 +183,8 @@ def call_rag_chat():
             str,
             "Refined message which keeps the original meaning and can be used to retrieve content for code generation and question answering.",
         ],
-        n_results: Annotated[int, "number of results"] = 3,
-    ) -> str:
+        n_results: Annotated[int, "number of results"] = 3,) -> str:
+        
         boss_aid.n_results = n_results  # Set the number of results to be retrieved.
         _context = {"problem": message, "n_results": n_results}
         ret_msg = boss_aid.message_generator(boss_aid, None, _context)
@@ -193,7 +201,7 @@ def call_rag_chat():
         executor.register_for_execution()(d_retrieve_content)
 
     groupchat = autogen.GroupChat(
-        agents=[boss, pm, coder, reviewer, research_report_writer],
+        agents=[boss, boss_aid, pm, coder, reviewer, research_report_writer],
         messages=[],
         max_round=12,
         speaker_selection_method="round_robin",
@@ -208,7 +216,7 @@ def call_rag_chat():
         message=PROBLEM,
     )
 
-PROBLEM = "Investigate how applying scalping strategy to BTC would have resulted in 2024 in terms of profits"
+PROBLEM = "Comprehensively explain the strategies in the book."
 
 # Select whether with rag or no rag
-need_internet_chat()
+call_rag_chat()
