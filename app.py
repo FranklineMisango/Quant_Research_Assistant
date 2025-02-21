@@ -9,10 +9,108 @@ import autogen
 nest_asyncio.apply()
 from typing_extensions import Annotated
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
-import chromadb
 from typing_extensions import Annotated
+import chromadb
 
-config_list = autogen.config_list_from_json("OAI_CONFIG_LIST")
+config_list = autogen.config_list_from_json("OAI_CONFIG_LIST.json")
+assistant = AssistantAgent(
+    name="assistant",
+    system_message="You are a helpful assistant.",
+    llm_config={
+        "timeout": 600,
+        "cache_seed": 42,
+        "config_list": config_list,
+    },
+)
+ragproxyagent = RetrieveUserProxyAgent(
+    name="ragproxyagent",
+    human_input_mode="NEVER",
+    max_consecutive_auto_reply=3,
+    retrieve_config={
+        "task": "code",
+        "docs_path": [
+            "https://raw.githubusercontent.com/microsoft/FLAML/main/website/docs/Examples/Integrate%20-%20Spark.md",
+            "https://raw.githubusercontent.com/microsoft/FLAML/main/website/docs/Research.md",
+        ],
+        "chunk_token_size": 2000,
+        "model": config_list[0]["model"],
+        "vector_db": "chroma",
+        "overwrite": False,  # set to True if you want to overwrite an existing collection
+        "get_or_create": True,  # set to False if don't want to reuse an existing collection
+    },
+    code_execution_config=False,  # set to False if you don't want to execute the code
+)
+
+
+
+
+# reset the assistant. Always reset the assistant before starting a new conversation.
+assistant.reset()
+
+# given a problem, we use the ragproxyagent to generate a prompt to be sent to the assistant as the initial message.
+# the assistant receives the message and generates a response. The response will be sent back to the ragproxyagent for processing.
+# The conversation continues until the termination condition is met, in RetrieveChat, the termination condition when no human-in-loop is no code block detected.
+# With human-in-loop, the conversation will continue until the user says "exit".
+code_problem = "How can I use FLAML to perform a classification task and use spark to do parallel training. Train 30 seconds and force cancel jobs if time limit is reached."
+chat_result = ragproxyagent.initiate_chat(
+    assistant, message=ragproxyagent.message_generator, 
+problem=code_problem, search_string="spark"
+)  # search_string is used as an extra filter for the embeddings search, in this case, we only want to search documents that contain "spark".
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
+
+collection_names = chroma_client.list_collections()
+
+# Ensure 'groupchat' exists before using it
+if "groupchat" not in collection_names:
+    print("Creating collection 'groupchat'...")
+    chroma_client.create_collection(name="groupchat")
+
+# Now use the existing or newly created collection
+groupchat_collection = chroma_client.get_collection("groupchat")
+
+# Confirm stored documents
+print("Stored document IDs:", groupchat_collection.get()["ids"])
+
+
 
 print("LLM models: ", [config_list[i]["model"] for i in range(len(config_list))])
 
@@ -77,15 +175,19 @@ boss_aid = RetrieveUserProxyAgent(
         "chunk_token_size": 1000,
         "model": "gpt-4o",
         "collection_name": "groupchat",
-        "get_or_create": True,
+        "get_or_create": True,  
+        "chroma_client": chroma_client,  # Explicitly pass the ChromaDB client
     },
     code_execution_config={
         "last_n_messages": 3,
         "work_dir": "paper",
         "use_docker": True
     },
-    description="Assistant who has extra content retrieval power for solving difficult problems.",
+    description="Assistant with extra content retrieval power.",
 )
+
+
+
 
 coder = AssistantAgent(
     name="SeniorPythonEngineer",

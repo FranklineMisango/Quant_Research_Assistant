@@ -29,8 +29,7 @@ ragproxyagent = RetrieveUserProxyAgent(
     retrieve_config={
         "task": "code",
         "docs_path": [
-            "https://raw.githubusercontent.com/microsoft/FLAML/main/website/docs/Examples/Integrate%20-%20Spark.md",
-            "https://raw.githubusercontent.com/microsoft/FLAML/main/website/docs/Research.md",
+            "Financial_Documents/Successful Algorithmic Trading.pdf",
         ],
         "chunk_token_size": 2000,
         "model": config_list[0]["model"],
@@ -48,8 +47,9 @@ assistant.reset()
 # the assistant receives the message and generates a response. The response will be sent back to the ragproxyagent for processing.
 # The conversation continues until the termination condition is met, in RetrieveChat, the termination condition when no human-in-loop is no code block detected.
 # With human-in-loop, the conversation will continue until the user says "exit".
-code_problem = "How can I use FLAML to perform a classification task and use spark to do parallel training. Train 30 seconds and force cancel jobs if time limit is reached."
+code_problem = "Explain this book"
 chat_result = ragproxyagent.initiate_chat(
     assistant, message=ragproxyagent.message_generator, 
+    
 problem=code_problem, search_string="spark"
 )
