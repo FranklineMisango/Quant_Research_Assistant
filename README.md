@@ -1,10 +1,11 @@
-# Quant_Research_Assistant
-A Quantitative Research bot that is powered by RAGentic Architecture which utilizes Autogen 2.0
+# Quant Research Assistant 🚀
 
-## Basic Autogen Architecture
-![basic_ag_image](images/ms_autogen_diagram.jpg)
+A Quantitative Research bot powered by RAGentic Architecture utilizing Autogen 2.0.
 
+## Basic Autogen Architecture 🧠
 
-## Starting Architecture
-![starting_architecture](images/quant_researcher_architecture.jpg)
+![Basic Autogen Architecture](images/ms_autogen_diagram.jpg)
 
+## Learn More 📚
+
+For more information, visit the [Autogen Blog](https://microsoft.github.io/autogen/0.2/blog/2023/10/18/RetrieveChat/).
