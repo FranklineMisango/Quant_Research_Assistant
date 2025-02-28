@@ -28,7 +28,7 @@ ragproxyagent = RetrieveUserProxyAgent(
     retrieve_config={
         "task": "code",
         "docs_path": [
-            "Financial_Documents/Successful Algorithmic Trading.pdf",
+            "Financial_Documents/Market_Data_CSV/3_year_NVDA_Test_data.csv",
         ],
         "chunk_token_size": 2000,
         "model": config_list[0]["model"],
@@ -46,7 +46,7 @@ assistant.reset()
 # the assistant receives the message and generates a response. The response will be sent back to the ragproxyagent for processing.
 # The conversation continues until the termination condition is met, in RetrieveChat, the termination condition when no human-in-loop is no code block detected.
 # With human-in-loop, the conversation will continue until the user says "exit".
-code_problem = "Explain all the strategies in this book and how they can be used in algorithmic trading."
+code_problem = "This is 3 years worth of NVDA Data. Act as a financial analyst and provide a long analysis of the data."
 chat_result = ragproxyagent.initiate_chat(
     assistant, message=ragproxyagent.message_generator, 
     
