@@ -1,4 +1,5 @@
 import asyncio
+import yaml
 import pandas as pd
 from langchain_experimental.tools.python.tool import PythonAstREPLTool
 from autogen_ext.tools.langchain import LangChainToolAdapter
@@ -10,9 +11,11 @@ from autogen_core import CancellationToken
 
 
 async def main() -> None:
-    df = pd.read_csv("https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/titanic.csv")  # type: ignore
+    df = pd.read_csv("Data/AAPL.csv")  # type: ignore
     tool = LangChainToolAdapter(PythonAstREPLTool(locals={"df": df}))
-    model_client = OpenAIChatCompletionClient(model="gpt-4o")
+    with open("model_config.yml", "r") as f:
+        model_config = yaml.safe_load(f)
+    model_client = OpenAIChatCompletionClient.load_component(model_config)
     agent = AssistantAgent(
         "assistant",
         tools=[tool],
@@ -21,7 +24,7 @@ async def main() -> None:
     )
     await Console(
         agent.on_messages_stream(
-            [TextMessage(content="What's the average age of the passengers?", source="user")], CancellationToken()
+            [TextMessage(content="Compute the CAGR from year to year", source="user")], CancellationToken()
         )
     )
 
