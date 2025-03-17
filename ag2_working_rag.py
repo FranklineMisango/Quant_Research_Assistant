@@ -1,6 +1,6 @@
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from openai import OpenAI
-from autogen import  AssistantAgent, UserProxyAgent, register_function
+from autogen import AssistantAgent, UserProxyAgent, register_function
 import streamlit as st
 from autogen_ext.models.openai import AzureOpenAIChatCompletionClient
 import asyncio
@@ -10,12 +10,11 @@ import os
 import autogen
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
 
-#The secrets in Env
+# The secrets in Env
 Token = os.environ.get("OPEN_AI_API")
 End_point = os.environ.get("AZURE_OPENAI_ENDPOINT")
 
-st.title("AG2 With Custom Loaders :  RAGentic BETA  Prototype ")
-
+st.title("AG2 With Custom Loaders : RAGentic BETA Prototype")
 
 llm_config = {
     "model": "gpt-4o-mini",
@@ -31,6 +30,9 @@ if "chat_history" not in st.session_state:
 
 if "message" not in st.session_state:
     st.session_state.message = []
+
+if "docs_path" not in st.session_state:
+    st.session_state.docs_path = []
 
 # Clear chat history
 if st.button("Clear Chat History"):
@@ -67,8 +69,7 @@ class TrackableUserProxyAgent(RetrieveUserProxyAgent):
 assistant = TrackableAssistantAgent(
     name="assistant",
     llm_config=llm_config,
-    system_message=
-    """
+    system_message="""
     You should check the context of the question and provide a relevant answer.
     You should always use English to answer
     You MUST reply with TERMINATE after your answer.
@@ -103,6 +104,7 @@ class MyEmbeddingFunction(EmbeddingFunction):
 with st.sidebar:
     st.markdown("### Upload your document")
     uploaded_file = st.file_uploader("Choose a file")
+    
     def upload_file(uploaded_file):
         if uploaded_file is not None:
             with open(uploaded_file.name, "wb") as f:
@@ -111,24 +113,43 @@ with st.sidebar:
             file_path = uploaded_file.name
             return file_path
 
+
+    st.markdown("### Add a link")
+    link = st.text_input("Enter a link")
+    
+    def upload_link(link):
+        if link:
+            st.success("Link added successfully")
+            return link
+        return None
+
+    file_content = upload_file(uploaded_file)
+    link_content = upload_link(link)
+
+    if st.button("Clear Documents"):
+        st.session_state.docs_path = []
+
+    if file_content:
+        st.session_state.docs_path.append(file_content)
+    if link_content:
+        st.session_state.docs_path.append(link_content)
+
 ragproxyagent = TrackableUserProxyAgent(
     name="ragproxyagent",
     human_input_mode="NEVER",
     is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
     retrieve_config={
         "task": "default",
-        "docs_path": upload_file(uploaded_file),
+        "docs_path": st.session_state.docs_path,
         "embedding_function": MyEmbeddingFunction(),
-        "get_or_create":True, 
-        "overwrite":True
+        "get_or_create": True, 
+        "overwrite": True
     },
     system_message="Send one question only",
-
 )
 
 user_input = st.chat_input("Type your query.")
 if user_input:
-
     st.session_state.chat_history.append({"sender": "user", "message": user_input})
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -139,7 +160,13 @@ if user_input:
             assistant,
             message=ragproxyagent.message_generator,
             problem=user_input,
-        )
+            max_turns=2, 
+            user_input=False, 
+            summary_method="reflection_with_llm")
         return result
 
     result = loop.run_until_complete(initiate_chat())
+
+# Ensure all documents are deleted from context when the app is closed
+def on_close():
+    st.session_state.docs_path = []
