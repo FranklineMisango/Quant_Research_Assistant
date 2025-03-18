@@ -143,7 +143,6 @@ with st.sidebar:
         st.session_state.docs_path.append(file_content)
     if link_content:
         st.session_state.docs_path.append(link_content)
-
 ragproxyagent = TrackableUserProxyAgent(
     name="ragproxyagent",
     human_input_mode="NEVER",
@@ -177,6 +176,10 @@ if user_input:
 
     result = loop.run_until_complete(initiate_chat())
 
+    with st.expander("Contextualization Process"):
+        st.write(result)
+
 # Ensure all documents are deleted from context when the app is closed
 def on_close():
     st.session_state.docs_path = []
+
