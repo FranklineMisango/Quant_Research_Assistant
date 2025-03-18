@@ -11,7 +11,7 @@ from autogen_core import CancellationToken
 
 
 async def main() -> None:
-    df = pd.read_csv("Data/AAPL.csv")  # type: ignore
+    df = pd.read_csv("/workspaces/Quant_Research_Assistant/paper/historical_data.csv")  # type: ignore
     tool = LangChainToolAdapter(PythonAstREPLTool(locals={"df": df}))
     with open("model_config.yml", "r") as f:
         model_config = yaml.safe_load(f)
@@ -24,7 +24,7 @@ async def main() -> None:
     )
     await Console(
         agent.on_messages_stream(
-            [TextMessage(content="Compute the CAGR from year to year", source="user")], CancellationToken()
+            [TextMessage(content="Count duplicates in the dataset", source="user")], CancellationToken()
         )
     )
 
