@@ -174,7 +174,7 @@ search_agent = AssistantAgent(
     name="Google_Search_Agent",
     model_client=client,
     tools=[google_search_tool],
-    description="Search Google for information, returns top 2 results with a snippet and body content",
+    description="Search Google for information, returns top 10 results with a snippet and body content",
     system_message="You are a helpful AI assistant. Solve tasks using your tools.",
 )
 
@@ -197,7 +197,7 @@ report_agent = AssistantAgent(
 team = RoundRobinGroupChat([stock_analysis_agent, search_agent, report_agent], max_turns=3)
 
 async def main():
-    stream = team.run_stream(task="Write a financial report on NVidia")
+    stream = team.run_stream(task=input("Enter the request: "))
     await Console(stream)
 
 
