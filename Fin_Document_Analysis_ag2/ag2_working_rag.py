@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 import autogen
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import OpenAIEmbeddings
+from tiktoken import encoding_for_model
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
 
 # The secrets in Env
@@ -78,28 +81,35 @@ assistant = TrackableAssistantAgent(
     code_execution_config={"work_dir": "coding", "use_docker": False}
 )
 
-class MyEmbeddingFunction(EmbeddingFunction):
+class CombinedEmbeddingFunction(EmbeddingFunction):
     def __init__(self):
         self.client = OpenAI(
-            api_key=Token,
+            api_key=os.environ.get("OPEN_AI_API"),
         )
         self.deployment_id = os.environ.get("AZURE_EMBEDDING_NAME")
 
-    def split_into_chunks(self, document: str, chunk_size: int = 512) -> list:
-        # Split the document into chunks of the specified size
-        return [document[i:i + chunk_size] for i in range(0, len(document), chunk_size)]
+    def split_into_chunks(self, text: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> list:
+        encoder = encoding_for_model("text-embedding-3-small")
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            separators=["\n\n", "\n", " ", ""],
+            length_function=lambda text: len(encoder.encode(text))
+        )
+        chunks = text_splitter.create_documents(text)  # Pass text directly
+        return chunks
 
-    def __call__(self, input: Documents) -> Embeddings:
+    def __call__(self, text: str) -> dict:
+        chunks = self.split_into_chunks(text)
         all_embeddings = []
-        for doc in input:
-            chunks = self.split_into_chunks(doc)
-            for chunk in chunks:
-                response = self.client.embeddings.create(
-                    input=[chunk],
-                    model="text-embedding-3-small"
-                ).data[0].embedding
-                all_embeddings.append(response)
+        for chunk in chunks:
+            response = self.client.embeddings.create(
+                input=[chunk.page_content],
+                model="text-embedding-3-small"
+            ).data[0].embedding
+            all_embeddings.append(response)
         return all_embeddings
+
 
 with st.sidebar:
     st.markdown("### Upload your document")
@@ -141,7 +151,7 @@ ragproxyagent = TrackableUserProxyAgent(
     retrieve_config={
         "task": "default",
         "docs_path": st.session_state.docs_path,
-        "embedding_function": MyEmbeddingFunction(),
+        "embedding_function": CombinedEmbeddingFunction(),
         "get_or_create": True, 
         "overwrite": True
     },
