@@ -12,7 +12,7 @@ from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProx
 import chromadb
 from typing_extensions import Annotated
 
-config_list = autogen.config_list_from_json("OAI_CONFIG_LIST")
+config_list = autogen.config_list_from_json("OAI_CONFIG_LIST.json")
 
 print("LLM models: ", [config_list[i]["model"] for i in range(len(config_list))])
 
@@ -31,28 +31,6 @@ llm_config = {
     "seed": 1234
 }
 
-#The agent for
-deep_research_llm_config = {
-    "config_list": [{"api_type": "openai", "model": "gpt-4o-mini", "api_key": os.environ["OPEN_AI_API"]}],
-}
-
-agent = DeepResearchAgent(
-    name="DeepResearchAgent",
-    llm_config=deep_research_llm_config, 
-    system_message="You can read papers on the internet and other sources to provide detailed information on the topic.",
-)
-
-#The agent for internet access below 
-def need_internet_chat():
-        result = agent.run(
-            message=PROBLEM,
-            tools=agent.tools,
-            max_turns=2,
-            user_input=False,
-            summary_method="reflection_with_llm",
-            )
-    
-        print(result.summary)
 
 def termination_msg(x):
     return isinstance(x, dict) and "TERMINATE" == str(x.get("content", ""))[-9:].upper()
@@ -60,6 +38,7 @@ def termination_msg(x):
 boss = autogen.UserProxyAgent(
     name="SeniorQuant",
     is_termination_msg=termination_msg,
+    system_message="You are a senior quant and you ask questions and give tasks.",
     human_input_mode="NEVER",
     code_execution_config=False, 
     description="The boss who ask questions and give tasks.",
@@ -134,7 +113,6 @@ def _reset_agents():
     coder.reset()
     pm.reset()
     reviewer.reset()
-    agent.reset()
 
 def rag_chat():
     _reset_agents()
@@ -151,10 +129,11 @@ def rag_chat():
         n_results=3,
     )
 
+
 def norag_chat():
     _reset_agents()
     groupchat = autogen.GroupChat(
-        agents=[boss,boss_aid, pm, coder, reviewer, agent, research_report_writer],
+        agents=[boss,boss_aid, pm, coder, reviewer, research_report_writer],
         messages=[],
         max_round=12,
         speaker_selection_method="auto",
@@ -216,7 +195,5 @@ def call_rag_chat():
         message=PROBLEM,
     )
 
-PROBLEM = "Comprehensively explain the strategies in the book."
+PROBLEM = "Find how oil stocks are doing in USA"
 
-# Select whether with rag or no rag
-call_rag_chat()
