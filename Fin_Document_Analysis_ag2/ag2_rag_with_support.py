@@ -48,7 +48,6 @@ boss_aid = RetrieveUserProxyAgent(
     name="QuantAssistant",
     is_termination_msg=termination_msg,
     human_input_mode="NEVER",
-    default_auto_reply="Reply `TERMINATE` if the task is done.",
     max_consecutive_auto_reply=3,
     retrieve_config={
         "task": "code",
@@ -79,7 +78,6 @@ coder = AssistantAgent(
     llm_config=llm_config,
     description="Senior Python Engineer who can write code to solve problems and answer questions.",
 )
-
 
 
 pm = autogen.AssistantAgent(
@@ -133,9 +131,9 @@ def rag_chat():
 def norag_chat():
     _reset_agents()
     groupchat = autogen.GroupChat(
-        agents=[boss,boss_aid, pm, coder, reviewer, research_report_writer],
+        agents=[boss, pm, coder, reviewer, research_report_writer],
         messages=[],
-        max_round=12,
+        max_round=10,
         speaker_selection_method="auto",
         allow_repeat_speaker=False,
     )
@@ -146,8 +144,6 @@ def norag_chat():
         manager,
         message=PROBLEM,
     )
-
-
 
 
 def call_rag_chat():
@@ -182,7 +178,7 @@ def call_rag_chat():
     groupchat = autogen.GroupChat(
         agents=[boss, boss_aid, pm, coder, reviewer, research_report_writer],
         messages=[],
-        max_round=12,
+        max_round=10,
         speaker_selection_method="round_robin",
         allow_repeat_speaker=False,
     )
@@ -195,5 +191,6 @@ def call_rag_chat():
         message=PROBLEM,
     )
 
-PROBLEM = "Find how oil stocks are doing in USA"
+PROBLEM = "Write a report and Analyze Nvidia stock using 2025 data"
 
+norag_chat()

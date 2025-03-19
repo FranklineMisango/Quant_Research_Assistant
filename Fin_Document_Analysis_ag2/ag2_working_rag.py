@@ -74,7 +74,7 @@ assistant = TrackableAssistantAgent(
     llm_config=llm_config,
     system_message="""
     You should check the context of the question and provide a relevant answer.
-    You should always use English to answer
+    The default language is English.
     You MUST reply with TERMINATE after your answer.
     """,
     human_input_mode="NEVER", 
@@ -152,9 +152,9 @@ ragproxyagent = TrackableUserProxyAgent(
         "docs_path": st.session_state.docs_path,
         "embedding_function": CombinedEmbeddingFunction(),
         "get_or_create": True, 
-        "overwrite": True
+        "overwrite": False
     },
-    system_message="Send one question only",
+    system_message="Send one question only and language is English",
 )
 
 user_input = st.chat_input("Type your query.")
