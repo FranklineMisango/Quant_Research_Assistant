@@ -5,6 +5,9 @@ from transformers import pipeline
 import os
 from dotenv import load_dotenv
 load_dotenv('./.env')
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPEN_AI_API"))
 
 def fetch_podcast_audio(spotify_client_id, spotify_client_secret, podcast_url):
     sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
@@ -13,7 +16,7 @@ def fetch_podcast_audio(spotify_client_id, spotify_client_secret, podcast_url):
     ))
     episode_id = podcast_url.split("/")[-1].split("?")[0]
     try:
-        episode = sp.episode(episode_id, market="US")  # Specify the market
+        episode = sp.episode(episode_id, market="US")  
         print(f"Found episode: {episode['name']} - {episode['description']}")
         return episode['name'], episode['description']
     except spotipy.exceptions.SpotifyException as e:
@@ -23,24 +26,46 @@ def fetch_podcast_audio(spotify_client_id, spotify_client_secret, podcast_url):
             print(f"Error fetching episode: {e}")
         return None, None
 
-
 def extract_technical_content(transcript):
-    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-    summary = summarizer(transcript, max_length=200, min_length=50, do_sample=False)
-    return summary[0]['summary_text']
+    summarizer = pipeline("summarization", model="t5-small")
+    max_chunk_size = 512  
+    chunks = [transcript[i:i + max_chunk_size] for i in range(0, len(transcript), max_chunk_size)]
+
+    summaries = []
+    for chunk in chunks:
+        try:
+            summary = summarizer(chunk, max_length=150, min_length=30, do_sample=False)
+            summaries.append(summary[0]['summary_text'])
+        except Exception as e:
+            print(f"Error summarizing chunk: {e}")
+
+    combined_summary = " ".join(summaries)
+    return combined_summary
+
 
 def generate_technical_report(technical_content):
-    generator = pipeline("text-generation", model="gpt-4")
     prompt = f"Create a technical report based on the following content:\n\n{technical_content}"
-    report = generator(prompt, max_length=500)
-    return report[0]['generated_text']
+    response = client.chat.completions.create(model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": prompt}
+    ],
+    max_tokens=500,
+    temperature=0.7)
+    return response.choices[0].message.content.strip()
 
 def generate_code_from_report(technical_report):
-    code_generator = pipeline("tex t-generation", model="gpt-4-codex")
-    code_prompt = f"Write Python code based on the following technical report:\n\n{technical_report}"
-    code = code_generator(code_prompt, max_length=1000)
-    return code[0]['generated_text']
-
+    prompt = f"Write Python code based on the following technical report:\n\n{technical_report}"
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=1000,
+        temperature=0.7
+    )
+    return response.choices[0].message.content.strip()
 
 def main():
     spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID")
