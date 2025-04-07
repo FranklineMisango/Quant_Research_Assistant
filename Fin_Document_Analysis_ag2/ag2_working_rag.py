@@ -26,6 +26,7 @@ llm_config = {
 
 import chromadb
 chromadb.api.client.SharedSystemClient.clear_system_cache()
+st.session_state.max_upload_size = 1024  # Adjust as needed
 
 # Initialize chat history and message in session state
 if "chat_history" not in st.session_state:
@@ -152,7 +153,7 @@ ragproxyagent = TrackableUserProxyAgent(
         "docs_path": st.session_state.docs_path,
         "embedding_function": CombinedEmbeddingFunction(),
         "get_or_create": True, 
-        "overwrite": False
+        "overwrite": True
     },
     system_message="Send one question only and language is English",
 )
