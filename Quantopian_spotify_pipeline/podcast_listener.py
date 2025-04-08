@@ -76,7 +76,7 @@ def main():
     if not podcast_name:
         return
 
-    transcript_file_path = "transcript.txt"  
+    transcript_file_path = "sample_transcript.txt"  
     print("Reading transcript from file...")
     with open(transcript_file_path, "r") as file:
         transcript = file.read()
