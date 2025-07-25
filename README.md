@@ -1,4 +1,4 @@
-# Arithmax Research Quantitative Research 1.0.0
+# Quant Research Assistant 1.0.0
 
 An intelligent agentic AI system built with Microsoft Semantic Kernel that performs quantitative research by analyzing YouTube videos, Market trends and generating trading signals. This system combines the power of AI-driven content analysis with sophisticated trading algorithms.
 
