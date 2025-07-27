@@ -17,7 +17,8 @@ public class InteractiveCLI
     private readonly Kernel _kernel;
     private readonly AgentOrchestrator _orchestrator;
     private readonly ILogger<InteractiveCLI> _logger;
-
+    
+    // ... existing code ...
     public InteractiveCLI(Kernel kernel, AgentOrchestrator orchestrator, ILogger<InteractiveCLI> logger)
     {
         _kernel = kernel;
@@ -34,12 +35,23 @@ public class InteractiveCLI
         Console.WriteLine("  1. analyze-video [url] - Analyze a YouTube video");
         Console.WriteLine("  2. get-quantopian-videos - Get latest Quantopian videos");
         Console.WriteLine("  3. search-finance-videos [query] - Search finance videos");
-        Console.WriteLine("  4. generate-signals [symbol] - Generate trading signals");
+        Console.WriteLine("  4. technical-analysis [symbol] - Short-term (100d) technical analysis");
+        Console.WriteLine("  5. technical-analysis-long [symbol] - Long-term (7y) technical analysis");
+        Console.WriteLine("  6. fundamental-analysis [symbol] - Fundamental & sentiment analysis");
         Console.WriteLine("  5. market-data [symbol] - Get market data");
-        Console.WriteLine("  6. portfolio - View portfolio summary");
-        Console.WriteLine("  7. risk-assessment - Assess portfolio risk");
-        Console.WriteLine("  8. help - Show available functions");
-        Console.WriteLine("  9. quit - Exit the application");
+        Console.WriteLine("  7. yahoo-data [symbol] - Get Yahoo Finance market data");
+        Console.WriteLine("  8. portfolio - View portfolio summary");
+        Console.WriteLine("  9. risk-assessment - Assess portfolio risk");
+        Console.WriteLine(" 10. alpaca-data [symbol] - Get Alpaca market data");
+        Console.WriteLine(" 11. alpaca-historical [symbol] [days] - Get historical data");
+        Console.WriteLine(" 12. alpaca-account - View Alpaca account info");
+        Console.WriteLine(" 13. alpaca-positions - View current positions");
+        Console.WriteLine(" 14. alpaca-quotes [symbols] - Get multiple quotes");
+        Console.WriteLine(" 15. ta-indicators [symbol] [category] - Detailed indicators");
+        Console.WriteLine(" 16. ta-compare [symbols] - Compare TA of multiple symbols");
+        Console.WriteLine(" 17. ta-patterns [symbol] - Pattern recognition analysis");
+        Console.WriteLine(" 18. help - Show available functions");
+        Console.WriteLine(" 19. quit - Exit the application");
         Console.WriteLine();
 
         while (true)
@@ -58,6 +70,7 @@ public class InteractiveCLI
         }
     }
 
+
     private async Task ProcessCommandAsync(string input)
     {
         try
@@ -70,49 +83,74 @@ public class InteractiveCLI
                 case "analyze-video":
                     await AnalyzeVideoCommand(parts);
                     break;
-
                 case "get-quantopian-videos":
                     await GetQuantopianVideosCommand();
                     break;
-
                 case "search-finance-videos":
                     await SearchFinanceVideosCommand(parts);
                     break;
-
-                case "generate-signals":
-                    await GenerateSignalsCommand(parts);
+                case "technical-analysis":
+                    await TechnicalAnalysisCommand(parts); // short-term (100d)
                     break;
-
+                case "technical-analysis-long":
+                    await TechnicalAnalysisLongCommand(parts); // long-term (7y)
+                    break;
+                case "fundamental-analysis":
+                    await FundamentalAnalysisCommand(parts);
+                    break;
                 case "market-data":
                     await MarketDataCommand(parts);
                     break;
-
+                case "yahoo-data":
+                    await YahooDataCommand(parts);
+                    break;
                 case "portfolio":
                     await PortfolioCommand();
                     break;
-
                 case "risk-assessment":
                     await RiskAssessmentCommand();
                     break;
-
+                case "alpaca-data":
+                    await AlpacaDataCommand(parts);
+                    break;
+                case "alpaca-historical":
+                    await AlpacaHistoricalCommand(parts);
+                    break;
+                case "alpaca-account":
+                    await AlpacaAccountCommand();
+                    break;
+                case "alpaca-positions":
+                    await AlpacaPositionsCommand();
+                    break;
+                case "alpaca-quotes":
+                    await AlpacaQuotesCommand(parts);
+                    break;
+                case "ta-indicators":
+                    await TechnicalIndicatorsCommand(parts);
+                    break;
+                case "ta-compare":
+                    await TechnicalCompareCommand(parts);
+                    break;
+                case "ta-patterns":
+                    await TechnicalPatternsCommand(parts);
+                    break;
                 case "help":
                     await ShowAvailableFunctions();
                     break;
-
                 case "test":
                     await RunTestSequence();
                     break;
-
                 default:
-                    // Try to execute as a direct Semantic Kernel function call
                     await ExecuteSemanticFunction(input);
                     break;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
-            _logger.LogError(ex, "Error processing command: {Command}", input);
+            // Only show a minimal error message, no logs
+            PrintSectionHeader("Error");
+            Console.WriteLine($"{ex.Message}");
+            PrintSectionFooter();
         }
     }
 
@@ -120,78 +158,65 @@ public class InteractiveCLI
     {
         var url = parts.Length > 1 ? parts[1] : "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         
-        Console.WriteLine($"Analyzing YouTube video: {url}");
-        
+        PrintSectionHeader("YouTube Video Analysis");
+        Console.WriteLine($"Video URL: {url}");
         var function = _kernel.Plugins["YouTubeAnalysisPlugin"]["AnalyzeVideo"];
         var result = await _kernel.InvokeAsync(function, new() { ["videoUrl"] = url });
-        
         Console.WriteLine(result.ToString());
+        PrintSectionFooter();
     }
 
     private async Task GetQuantopianVideosCommand()
     {
-        Console.WriteLine("Getting latest Quantopian videos...");
-        
+        PrintSectionHeader("Latest Quantopian Videos");
         var function = _kernel.Plugins["YouTubeAnalysisPlugin"]["GetLatestQuantopianVideos"];
         var result = await _kernel.InvokeAsync(function, new() { ["maxResults"] = 5 });
-        
         Console.WriteLine(result.ToString());
+        PrintSectionFooter();
     }
 
     private async Task SearchFinanceVideosCommand(string[] parts)
     {
         var query = parts.Length > 1 ? string.Join(" ", parts.Skip(1)) : "quantitative trading";
         
-        Console.WriteLine($"🔍 Searching finance videos for: {query}");
-        
+        PrintSectionHeader("Finance Video Search");
+        Console.WriteLine($"Query: {query}");
         var function = _kernel.Plugins["YouTubeAnalysisPlugin"]["SearchFinanceVideos"];
         var result = await _kernel.InvokeAsync(function, new() { ["query"] = query, ["maxResults"] = 5 });
-        
         Console.WriteLine(result.ToString());
+        PrintSectionFooter();
     }
 
-    private async Task GenerateSignalsCommand(string[] parts)
-    {
-        var symbol = parts.Length > 1 ? parts[1] : null;
-        
-        Console.WriteLine(symbol != null ? $"Generating signals for {symbol}..." : "Generating signals for all symbols...");
-        
-        var function = _kernel.Plugins["TradingPlugin"]["GenerateTradingSignals"];
-        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol });
-        
-        Console.WriteLine(result.ToString());
-    }
+
 
     private async Task MarketDataCommand(string[] parts)
     {
         var symbol = parts.Length > 1 ? parts[1] : "BTCUSDT";
         
-        Console.WriteLine($"Getting market data for {symbol}...");
-        
+        PrintSectionHeader("Market Data");
+        Console.WriteLine($"Symbol: {symbol}");
         var function = _kernel.Plugins["MarketDataPlugin"]["GetMarketData"];
         var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol });
-        
         Console.WriteLine(result.ToString());
+        PrintSectionFooter();
     }
 
     private async Task PortfolioCommand()
     {
-        Console.WriteLine("Getting portfolio summary...");
-        
+        PrintSectionHeader("Portfolio Summary");
         var function = _kernel.Plugins["RiskManagementPlugin"]["GetPortfolioSummary"];
         var result = await _kernel.InvokeAsync(function);
-        
         Console.WriteLine(result.ToString());
+        PrintSectionFooter();
     }
 
     private async Task RiskAssessmentCommand()
     {
-        Console.WriteLine("Assessing portfolio risk...");
-        
+        PrintSectionHeader("Portfolio Risk Assessment");
         var function = _kernel.Plugins["RiskManagementPlugin"]["AssessPortfolioRisk"];
         var result = await _kernel.InvokeAsync(function);
-        
         Console.WriteLine(result.ToString());
+        PrintSectionFooter();
     }
 
     private async Task ShowAvailableFunctions()
@@ -209,6 +234,8 @@ public class InteractiveCLI
             }
             Console.WriteLine();
         }
+
+        await Task.CompletedTask;
     }
 
     private async Task ExecuteSemanticFunction(string input)
@@ -233,7 +260,7 @@ public class InteractiveCLI
         var functionName = functionParts[1];
 
         // Parse parameters
-        var parameters = new Dictionary<string, object>();
+        var parameters = new Dictionary<string, object?>();
         for (int i = 1; i < parts.Length; i++)
         {
             var paramParts = parts[i].Split('=', 2);
@@ -270,30 +297,260 @@ public class InteractiveCLI
         await MarketDataCommand(new[] { "market-data", "BTCUSDT" });
         Console.WriteLine();
 
-        // Test 3: Generate Signals
-        Console.WriteLine("3. Testing signal generation...");
-        await GenerateSignalsCommand(new[] { "generate-signals", "BTCUSDT" });
-        Console.WriteLine();
-
-        // Test 4: Portfolio Summary
-        Console.WriteLine("4. Testing portfolio summary...");
+        // Test 3: Portfolio Summary
+        Console.WriteLine("3. Testing portfolio summary...");
         await PortfolioCommand();
         Console.WriteLine();
 
-        // Test 5: Risk Assessment
-        Console.WriteLine("5. Testing risk assessment...");
+        // Test 4: Risk Assessment
+        Console.WriteLine("4. Testing risk assessment...");
         await RiskAssessmentCommand();
         Console.WriteLine();
 
         Console.WriteLine("Test sequence completed!");
     }
 
-    public static async Task<InteractiveCLI> CreateAsync(IServiceProvider serviceProvider)
+    private async Task YahooDataCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        PrintSectionHeader("Yahoo Finance Data");
+        Console.WriteLine($"Symbol: {symbol}");
+        var function = _kernel.Plugins["MarketDataPlugin"]["GetYahooMarketData"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol });
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    public static Task<InteractiveCLI> CreateAsync(IServiceProvider serviceProvider)
     {
         var kernel = serviceProvider.GetRequiredService<Kernel>();
         var orchestrator = serviceProvider.GetRequiredService<AgentOrchestrator>();
         var logger = serviceProvider.GetRequiredService<ILogger<InteractiveCLI>>();
 
-        return new InteractiveCLI(kernel, orchestrator, logger);
+        return Task.FromResult(new InteractiveCLI(kernel, orchestrator, logger));
+    }
+
+    // Alpaca Commands
+    private async Task AlpacaDataCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        
+        PrintSectionHeader("Alpaca Market Data");
+        Console.WriteLine($"Symbol: {symbol}");
+        var function = _kernel.Plugins["AlpacaPlugin"]["GetMarketData"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol });
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    private async Task AlpacaHistoricalCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        var days = parts.Length > 2 && int.TryParse(parts[2], out var d) ? d : 30;
+        
+        PrintSectionHeader("Alpaca Historical Data");
+        Console.WriteLine($"Symbol: {symbol} | Days: {days}");
+        var function = _kernel.Plugins["AlpacaPlugin"]["GetHistoricalData"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol, ["days"] = days });
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    private async Task AlpacaAccountCommand()
+    {
+        PrintSectionHeader("Alpaca Account Info");
+        var function = _kernel.Plugins["AlpacaPlugin"]["GetAccountInfo"];
+        var result = await _kernel.InvokeAsync(function);
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    private async Task AlpacaPositionsCommand()
+    {
+        PrintSectionHeader("Alpaca Positions");
+        var function = _kernel.Plugins["AlpacaPlugin"]["GetPositions"];
+        var result = await _kernel.InvokeAsync(function);
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    private async Task AlpacaQuotesCommand(string[] parts)
+    {
+        var symbols = parts.Length > 1 ? parts[1] : "AAPL,MSFT,GOOGL";
+        
+        PrintSectionHeader("Alpaca Multiple Quotes");
+        Console.WriteLine($"Symbols: {symbols}");
+        var function = _kernel.Plugins["AlpacaPlugin"]["GetMultipleQuotes"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbols"] = symbols });
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    // Technical Analysis Commands
+    private async Task TechnicalAnalysisCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        PrintSectionHeader("Technical Analysis");
+        Console.WriteLine($"Symbol: {symbol}");
+        var function = _kernel.Plugins["TechnicalAnalysisPlugin"]["AnalyzeSymbol"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol });
+        Console.WriteLine(result.ToString());
+
+        // --- News Sentiment & Outlook ---
+        PrintSectionHeader("News Sentiment & Outlook");
+        try
+        {
+            var sentimentFunction = _kernel.Plugins["MarketSentimentPlugin"]?["AnalyzeMarketSentimentAsync"];
+            if (sentimentFunction != null)
+            {
+                var sentimentResult = await _kernel.InvokeAsync(sentimentFunction, new() { ["assetClass"] = "stocks", ["specificAsset"] = symbol });
+                Console.WriteLine(sentimentResult.ToString());
+            }
+            else
+            {
+                Console.WriteLine("(No sentiment function available)");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"(Sentiment analysis unavailable: {ex.Message})");
+        }
+        PrintSectionFooter();
+    }
+
+    private async Task TechnicalIndicatorsCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        var category = parts.Length > 2 ? parts[2] : "all";
+        PrintSectionHeader("Technical Indicators");
+        Console.WriteLine($"Symbol: {symbol} | Category: {category}");
+        var function = _kernel.Plugins["TechnicalAnalysisPlugin"]["GetDetailedIndicators"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol, ["category"] = category });
+        Console.WriteLine(result.ToString());
+        // AI-powered summary/analysis
+        try
+        {
+            var aiSummaryFunction = _kernel.Plugins["TechnicalAnalysisPlugin"].Contains("AISummary")
+                ? _kernel.Plugins["TechnicalAnalysisPlugin"]["AISummary"]
+                : null;
+            if (aiSummaryFunction != null)
+            {
+                Console.WriteLine("\nAI Analysis:");
+                var aiSummary = await _kernel.InvokeAsync(aiSummaryFunction, new() { ["symbol"] = symbol, ["indicatorsText"] = result.ToString() });
+                Console.WriteLine(aiSummary.ToString());
+            }
+            else
+            {
+                var prompt = $"Given the following technical indicator results for {symbol}, provide a concise, actionable summary and highlight any notable trends, risks, or opportunities.\n\n{result.ToString()}";
+                var summaryFunction = _kernel.Plugins["GeneralAIPlugin"]?["Summarize"];
+                if (summaryFunction != null)
+                {
+                    Console.WriteLine("\nAI Analysis:");
+                    var aiSummary = await _kernel.InvokeAsync(summaryFunction, new() { ["input"] = prompt });
+                    Console.WriteLine(aiSummary.ToString());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"(AI analysis unavailable: {ex.Message})");
+        }
+        PrintSectionFooter();
+    }
+
+    private async Task TechnicalCompareCommand(string[] parts)
+    {
+        var symbols = parts.Length > 1 ? string.Join(",", parts.Skip(1)) : "AAPL,MSFT,GOOGL";
+        PrintSectionHeader("Technical Analysis Comparison");
+        Console.WriteLine($"Symbols: {symbols}");
+        var function = _kernel.Plugins["TechnicalAnalysisPlugin"]["CompareSymbols"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbols"] = symbols });
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    private async Task TechnicalPatternsCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        PrintSectionHeader("Pattern Recognition Analysis");
+        Console.WriteLine($"Symbol: {symbol}");
+        var function = _kernel.Plugins["TechnicalAnalysisPlugin"]["GetPatternAnalysis"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol });
+        Console.WriteLine(result.ToString());
+        PrintSectionFooter();
+    }
+
+    // Long-term technical analysis (7 years)
+    private async Task TechnicalAnalysisLongCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        PrintSectionHeader("Long-Term Technical Analysis");
+        Console.WriteLine($"Symbol: {symbol} | Lookback: 7 years");
+        var function = _kernel.Plugins["TechnicalAnalysisPlugin"]["AnalyzeSymbol"];
+        var result = await _kernel.InvokeAsync(function, new() { ["symbol"] = symbol, ["lookbackDays"] = 2555 });
+        Console.WriteLine(result.ToString());
+
+        // --- News Sentiment & Outlook ---
+        PrintSectionHeader("News Sentiment & Outlook");
+        try
+        {
+            var sentimentFunction = _kernel.Plugins["MarketSentimentPlugin"]?["AnalyzeMarketSentimentAsync"];
+            if (sentimentFunction != null)
+            {
+                var sentimentResult = await _kernel.InvokeAsync(sentimentFunction, new() { ["assetClass"] = "stocks", ["specificAsset"] = symbol });
+                Console.WriteLine(sentimentResult.ToString());
+            }
+            else
+            {
+                Console.WriteLine("(No sentiment function available)");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"(Sentiment analysis unavailable: {ex.Message})");
+        }
+        PrintSectionFooter();
+    }
+
+    // Fundamental & sentiment analysis
+    private async Task FundamentalAnalysisCommand(string[] parts)
+    {
+        var symbol = parts.Length > 1 ? parts[1] : "AAPL";
+        PrintSectionHeader("Fundamental & Sentiment Analysis");
+        Console.WriteLine($"Symbol: {symbol}");
+        try
+        {
+            var function = _kernel.Plugins["CompanyValuationPlugin"]?["AnalyzeStock"];
+            if (function != null)
+            {
+                var result = await _kernel.InvokeAsync(function, new() { ["ticker"] = symbol });
+                Console.WriteLine(result.ToString());
+            }
+            else
+            {
+                Console.WriteLine("(No fundamental analysis function available)");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error analyzing stock {symbol}: {ex.Message}");
+        }
+        PrintSectionFooter();
+    }
+    // --- UI Section Helpers ---
+    private void PrintSectionHeader(string title)
+    {
+        Console.WriteLine();
+        Console.WriteLine(new string('=', 60));
+        Console.WriteLine($"{title.ToUpper(),-60}");
+        Console.WriteLine(new string('-', 60));
+    }
+
+
+    private void PrintSectionFooter()
+    {
+        Console.WriteLine(new string('=', 60));
+        Console.WriteLine();
     }
 }
+
