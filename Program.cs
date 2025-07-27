@@ -52,22 +52,43 @@ namespace QuantResearchAgent
             services.AddSingleton(configuration);
             services.AddSingleton(kernel);
 
-            // Add logging
-            services.AddLogging();
+            // Ensure logs directory exists for file logging
+            var logDir = Path.Combine(Directory.GetCurrentDirectory(), "logs");
+            if (!Directory.Exists(logDir))
+            {
+                Directory.CreateDirectory(logDir);
+            }
+
+            // Suppress all logging output
+            services.AddLogging(builder =>
+            {
+                builder.ClearProviders();
+                builder.SetMinimumLevel(LogLevel.Critical);
+            });
 
             // Add InteractiveCLI
             services.AddSingleton<InteractiveCLI>();
 
             // Add core services
+            services.AddSingleton<LeanDataService>();
             services.AddSingleton<AgentOrchestrator>();
             services.AddSingleton<YouTubeAnalysisService>();
-            services.AddSingleton<MarketDataService>();
+            services.AddSingleton<MarketDataService>(sp =>
+                new MarketDataService(
+                    sp.GetRequiredService<ILogger<MarketDataService>>(),
+                    sp.GetRequiredService<IConfiguration>(),
+                    sp.GetRequiredService<AlpacaService>(),
+                    sp.GetRequiredService<LeanDataService>()
+                )
+            );
             services.AddSingleton<TradingSignalService>();
             services.AddSingleton<PortfolioService>();
             services.AddSingleton<RiskManagementService>();
             services.AddSingleton<CompanyValuationService>();
             services.AddSingleton<HighFrequencyDataService>();
             services.AddSingleton<TradingStrategyLibraryService>();
+            services.AddSingleton<AlpacaService>();
+            services.AddSingleton<TechnicalAnalysisService>();
             services.AddSingleton<HttpClient>();
 
             // Add research agents
