@@ -1,2 +1,21 @@
 .env
 /data
+
+# Build artifacts
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+
+# IDE files
+.vscode/
+.vs/
+*.user
+*.suo
+
+# Temporary files
+*.tmp
+*.temp
+logs/
+*.log
