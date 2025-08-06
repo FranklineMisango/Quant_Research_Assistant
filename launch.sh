@@ -22,6 +22,11 @@ if [ ! -f "appsettings.json" ]; then
     exit 1
 fi
 
+#clean the project first before building
+# Clean the project first before building
+echo "🧹 Cleaning previous build..."
+dotnet clean QuantResearchAgent.csproj --configuration Release
+
 # Build the project
 echo "🔨 Building the project..."
 dotnet build QuantResearchAgent.csproj --configuration Release
@@ -33,14 +38,6 @@ fi
 
 echo " Build successful!"
 echo ""
-
-# Check for environment variables or prompt user
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo "   Warning: OPENAI_API_KEY environment variable not set."
-    echo "   Please update appsettings.json with your API key."
-    echo ""
-fi
-
 
 
 # Start the Python Flask API in the background
