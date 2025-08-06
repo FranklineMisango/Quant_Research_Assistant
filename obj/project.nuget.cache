@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "NV261t1xGs0=",
+  "dgSpecHash": "GmfcKh/JDXg=",
   "success": true,
   "projectFilePath": "/Users/misango/codechest/ArithmaxResearchChest/QuantResearchAgent.csproj",
   "expectedPackageFiles": [
@@ -76,10 +76,7 @@
     "/Users/misango/.nuget/packages/system.text.json/8.0.5/system.text.json.8.0.5.nupkg.sha512",
     "/Users/misango/.nuget/packages/system.threading.channels/9.0.0/system.threading.channels.9.0.0.nupkg.sha512",
     "/Users/misango/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
-    "/Users/misango/.nuget/packages/yahoofinanceapi/2.3.3/yahoofinanceapi.2.3.3.nupkg.sha512",
-    "/Users/misango/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.18/microsoft.aspnetcore.app.ref.8.0.18.nupkg.sha512",
-    "/Users/misango/.nuget/packages/microsoft.netcore.app.host.osx-x64/8.0.18/microsoft.netcore.app.host.osx-x64.8.0.18.nupkg.sha512",
-    "/Users/misango/.nuget/packages/microsoft.netcore.app.ref/8.0.18/microsoft.netcore.app.ref.8.0.18.nupkg.sha512"
+    "/Users/misango/.nuget/packages/yahoofinanceapi/2.3.3/yahoofinanceapi.2.3.3.nupkg.sha512"
   ],
   "logs": []
 }

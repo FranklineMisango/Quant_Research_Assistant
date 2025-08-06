@@ -1,0 +1,39 @@
+ * Serving Flask app 'yfinance_api'
+ * Debug mode: on
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://10.100.1.1:5001
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 115-109-366
+INFO:werkzeug:127.0.0.1 - - [06/Aug/2025 11:17:53] "GET /securities?tickers=OUT,NOW,UK,US,LP,I,A HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Aug/2025 11:17:59] "GET /securities?tickers=OUT,NOW,UK,US,LP,I,A HTTP/1.1" 200 -
+INFO:yfinance_api:Fetching fundamentals for ticker: PLTR
+WARNING:yfinance_api:Alpaca API returned 404 for PLTR
+INFO:yfinance_api:Getting Finviz data for PLTR
+INFO:yfinance_api:Finviz - P/E: 575.84
+INFO:yfinance_api:Finviz - Insider Own: 0.08539999999999999
+INFO:yfinance_api:Finviz - Shs Outstand: 2270000000.0
+INFO:yfinance_api:Finviz - Market Cap: 409090000000.0
+INFO:yfinance_api:Finviz - Forward P/E: 210.34
+INFO:yfinance_api:Finviz - PEG: 14.92
+INFO:yfinance_api:Finviz - Inst Own: 0.513
+INFO:yfinance_api:Finviz - Short Float: 0.024900000000000002
+INFO:yfinance_api:Finviz - P/S: 118.9
+INFO:yfinance_api:Finviz - P/B: 69.32
+INFO:yfinance_api:Finviz - ROE: 0.153
+INFO:yfinance_api:Finviz - Beta: 2.59
+INFO:yfinance_api:Finviz - Target Price: 145.77
+INFO:yfinance_api:Finviz - Debt/Eq: 0.04
+INFO:yfinance_api:Finviz - Price: 173.27
+INFO:yfinance_api:Finviz - Volume: 130917544.0
+INFO:yfinance_api:Google Search data for PLTR: {'symbol': 'PLTR', 'source': 'google_search'}
+INFO:yfinance_api:Successfully fetched fundamentals for PLTR
+INFO:werkzeug:127.0.0.1 - - [06/Aug/2025 11:18:03] "GET /fundamentals?ticker=PLTR HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Aug/2025 11:18:07] "GET /securities?tickers=OUT,NOW,UK,US,LP,I,A HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Aug/2025 11:18:18] "GET /securities?tickers=OUT,NOW,UK,US,LP,I,A HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Aug/2025 11:18:30] "GET /securities?tickers=OUT,NOW,UK,US,LP,I,A HTTP/1.1" 200 -
+/Users/misango/miniconda3/envs/trading_env/lib/python3.13/multiprocessing/resource_tracker.py:301: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-_30i95er'}
+  warnings.warn(
