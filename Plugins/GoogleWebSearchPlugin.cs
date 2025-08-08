@@ -35,7 +35,7 @@ namespace QuantResearchAgent.Plugins
             {
                 if (string.IsNullOrEmpty(_apiKey) || string.IsNullOrEmpty(_searchEngineId))
                 {
-                    _logger.LogWarning("Google Search API key or Search Engine ID not configured. Returning empty results.");
+                    _logger.LogError("Google Search API key or Search Engine ID not configured. Returning empty results.");
                     return results;
                 }
 
@@ -43,19 +43,74 @@ namespace QuantResearchAgent.Plugins
 
                 _logger.LogInformation($"Searching Google for: {query}");
 
-                var response = await _httpClient.GetStringAsync(requestUrl);
-                var searchResponse = JsonSerializer.Deserialize<GoogleSearchResponse>(response);
+                // Add delay to allow rate limits to reset from previous requests
+                await Task.Delay(10000);
 
+                // Implement retry logic for rate limiting
+                GoogleSearchResponse? searchResponse = null;
+                bool success = false;
+
+                for (int attempt = 0; attempt < 3 && !success; attempt++)
+                {
+                    try
+                    {
+                        var response = await _httpClient.GetStringAsync(requestUrl);
+                        _logger.LogInformation($"Raw API response length: {response.Length}");
+                        
+                        searchResponse = JsonSerializer.Deserialize<GoogleSearchResponse>(response);
+                        _logger.LogInformation($"Parsed response - Items count: {searchResponse?.Items?.Length ?? 0}");
+                        
+                        success = true; // Mark as successful
+                    }
+                    catch (HttpRequestException ex) when (ex.Message.Contains("429") || ex.Message.Contains("Too Many Requests"))
+                    {
+                        // Rate limiting - wait and retry
+                        var waitTime = (attempt + 1) * 30000; // 30, 60, 90 seconds
+                        _logger.LogWarning($"Rate limited on attempt {attempt + 1}, waiting {waitTime}ms before retry");
+                        
+                        if (attempt < 2) // Not the last attempt
+                        {
+                            await Task.Delay(waitTime);
+                        }
+                        else
+                        {
+                            _logger.LogError("Max retry attempts reached due to rate limiting");
+                            throw;
+                        }
+                    }
+                    catch (Exception ex) when ((ex.Data.Contains("StatusCode") && ex.Data["StatusCode"]?.ToString() == "429") || 
+                                               ex.Message.Contains("429") || 
+                                               ex.Message.Contains("Too Many Requests"))
+                    {
+                        // Alternative rate limiting detection
+                        var waitTime = (attempt + 1) * 30000; // 30, 60, 90 seconds
+                        _logger.LogWarning($"Rate limited on attempt {attempt + 1}, waiting {waitTime}ms before retry. Error: {ex.Message}");
+                        
+                        if (attempt < 2) // Not the last attempt
+                        {
+                            await Task.Delay(waitTime);
+                        }
+                        else
+                        {
+                            _logger.LogError("Max retry attempts reached due to rate limiting");
+                            throw;
+                        }
+                    }
+                }
+
+                // Process the results after successful API call
                 if (searchResponse?.Items != null)
                 {
                     foreach (var item in searchResponse.Items)
                     {
-                        results.Add(new WebSearchResult
+                        var result = new WebSearchResult
                         {
-                            Title = item.Title ?? string.Empty,
-                            Snippet = item.Snippet ?? string.Empty,
-                            Url = item.Link ?? string.Empty
-                        });
+                            Title = item.Title ?? "No Title",
+                            Url = item.Link ?? "No URL",
+                            Snippet = item.Snippet ?? "No Description"
+                        };
+                        
+                        results.Add(result);
                     }
                 }
 
