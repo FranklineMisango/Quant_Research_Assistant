@@ -107,11 +107,18 @@ namespace QuantResearchAgent
             services.AddSingleton<AlpacaService>();
             services.AddSingleton<TechnicalAnalysisService>();
             services.AddSingleton<HttpClient>();
+            services.AddSingleton<PolygonService>();
+            services.AddSingleton<DataBentoService>();
+            services.AddSingleton<YFinanceNewsService>();
+            services.AddSingleton<FinvizNewsService>();
+            services.AddSingleton<YahooFinanceService>();
 
             // Add research agents
             services.AddSingleton<NewsScrapingService>();
             services.AddSingleton<MarketSentimentAgentService>();
             services.AddSingleton<StatisticalPatternAgentService>();
+            services.AddSingleton<ComprehensiveStockAnalysisAgent>();
+            services.AddSingleton<AcademicResearchPaperAgent>();
         }
     }
 }

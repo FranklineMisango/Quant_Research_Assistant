@@ -294,6 +294,9 @@ def parse_finviz_value(value_text):
 def get_google_search_data(ticker):
     """Get financial data using Google Search API"""
     try:
+        # Use Google Search API credentials from appsettings.json
+        api_key = "AIzaSyDYJVpcewQUGMGkQkp96I7X8cPjAuzSRV0"
+        search_engine_id = "81db24ee2e0554e76"
         
         # Search for financial data
         search_query = f"{ticker} stock financial data market cap P/E ratio"
